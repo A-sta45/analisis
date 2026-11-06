@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Inversión - Banco</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f6f8; }
+        .card { max-width: 400px; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input { width: 100%; padding: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background-color: #0066cc; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background-color: #004b99; }
+        .result { margin-top: 20px; padding: 10px; background-color: #e6f2ff; border-radius: 4px; display: none; }
+        .error { margin-top: 20px; padding: 10px; background-color: #ffe6e6; color: #cc0000; border-radius: 4px; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Simulador de Inversión</h2>
+    <div class="form-group">
+        <label for="capital">Capital a invertir ($):</label>
+        <input type="number" id="capital" placeholder="Ej. 1000000" step="any" min="1">
+    </div>
+    <button onclick="calcularGanancia()">Calcular Ganancia</button>
+
+    <div id="resultado" class="result"></div>
+    <div id="error" class="error"></div>
+</div>
+
+<script>
+async function calcularGanancia() {
+    const capitalInput = document.getElementById('capital').value;
+    const resultadoDiv = document.getElementById('resultado');
+    const errorDiv = document.getElementById('error');
+
+    resultadoDiv.style.display = 'none';
+    errorDiv.style.display = 'none';
+
+    try {
+        const response = await fetch('http://127.0.0.1:5000/api/calcular-ganancia', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ capital: capitalInput })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            resultadoDiv.innerHTML = `
+                <p><strong>Ganancia en 1 mes:</strong> $${data.ganancia_mes.toLocaleString()}</p>
+                <p><strong>Monto total final:</strong> $${data.total_acumulado.toLocaleString()}</p>
+            `;
+            resultadoDiv.style.display = 'block';
+        } else {
+            errorDiv.innerText = data.error || 'Ocurrió un error en la solicitud.';
+            errorDiv.style.display = 'block';
+        }
+    } catch (err) {
+        errorDiv.innerText = 'No se pudo conectar con el servidor del banco.';
+        errorDiv.style.display = 'block';
+    }
+}
+</script>
+
+</body>
+</html>
